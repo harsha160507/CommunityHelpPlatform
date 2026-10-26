@@ -46,7 +46,6 @@ How to Run the Project
 5. Run "npm start".
 6. Open the frontend "index.html" file in a browser.
 
-Note: Make sure the database is configured and the backend server is running before testing the website.
 
 Conclusion
 
