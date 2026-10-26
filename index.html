@@ -1,0 +1,265 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Community Help Platform</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+
+    <!-- LOGIN AND REGISTRATION -->
+    <section id="authView" class="auth-layout">
+      <div class="auth-brand">
+        <div class="brand-mark">CH</div>
+        <h1>Community Help</h1>
+        <p>Connecting NGOs, volunteers and communities to create meaningful change.</p>
+        <div class="auth-benefit">✓ Verified NGO activities</div>
+        <div class="auth-benefit">✓ Meaningful volunteer opportunities</div>
+        <div class="auth-benefit">✓ Transparent event management</div>
+      </div>
+
+      <div class="auth-card">
+        <div class="auth-tabs">
+          <button type="button" class="auth-tab active" data-auth="login">Login</button>
+          <button type="button" class="auth-tab" data-auth="register">Create account</button>
+        </div>
+
+        <form id="loginForm">
+          <h2>Welcome back</h2>
+          <p class="muted">Log in to your community dashboard.</p>
+
+          <label for="loginEmail">Email address</label>
+          <input id="loginEmail" type="email" required placeholder="you@example.com">
+
+          <label for="loginPassword">Password</label>
+          <input id="loginPassword" type="password" required placeholder="Enter password">
+
+          <button class="btn btn-primary full" type="submit">Login to dashboard</button>
+          <p id="loginMessage" class="message" role="status"></p>
+          <p class="auth-switch">New here? <button type="button" data-switch-auth="register">Create an account</button></p>
+        </form>
+
+        <form id="registerForm" hidden>
+          <h2>Join our community</h2>
+          <p class="muted">Create an account to get started.</p>
+
+          <label for="registerName">Full name / organisation name</label>
+          <input id="registerName" required maxlength="100" placeholder="Enter your name">
+
+          <label for="registerEmail">Email address</label>
+          <input id="registerEmail" type="email" required placeholder="you@example.com">
+
+          <label for="registerPassword">Password</label>
+          <input id="registerPassword" type="password" minlength="8" required placeholder="At least 8 characters">
+
+          <label for="registerRole">Register as</label>
+          <select id="registerRole" required>
+            <option value="volunteer">Volunteer</option>
+            <option value="ngo">NGO</option>
+          </select>
+
+          <div id="descriptionWrap" hidden>
+            <label for="registerDescription">About your NGO</label>
+            <textarea id="registerDescription" rows="3" placeholder="Describe your organisation"></textarea>
+          </div>
+
+          <label for="registerPhone">Phone number</label>
+          <input id="registerPhone" type="tel" maxlength="20" placeholder="Phone number">
+
+          <label for="registerLocation">Location</label>
+          <input id="registerLocation" maxlength="150" placeholder="City / area">
+
+          <div id="interestWrap">
+            <label for="registerInterest">Interests</label>
+            <input id="registerInterest" maxlength="200" placeholder="Teaching, environment, food donation">
+          </div>
+
+          <button class="btn btn-primary full" type="submit">Create account</button>
+          <p id="registerMessage" class="message" role="status"></p>
+          <p class="auth-switch">Already registered? <button type="button" data-switch-auth="login">Login</button></p>
+        </form>
+      </div>
+    </section>
+
+    <!-- MAIN APPLICATION -->
+    <section id="appView" hidden>
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="brand-mark">CH</div>
+          <div><strong>Community Help</strong><small>Management portal</small></div>
+        </div>
+
+        <div class="profile-mini">
+          <div id="avatarLetter" class="avatar">U</div>
+          <div>
+            <strong id="profileName">User</strong>
+            <small id="profileRole">Volunteer</small>
+          </div>
+        </div>
+
+        <nav id="sideNav">
+          <button class="nav-link active" data-page="dashboard" data-roles="admin,ngo,volunteer">Overview</button>
+          <button class="nav-link" data-page="adminPanel" data-roles="admin">NGO approvals <span id="ngoPendingBadge" class="nav-badge" hidden>0</span></button>
+          <button class="nav-link" data-page="adminEventsPanel" data-roles="admin">Event approvals <span id="eventPendingBadge" class="nav-badge" hidden>0</span></button>
+          <button class="nav-link" data-page="adminDataPanel" data-roles="admin">Management tables</button>
+          <button class="nav-link" data-page="ngoPanel" data-roles="ngo">My events</button>
+          <button class="nav-link" data-page="volunteerPanel" data-roles="volunteer">Find events</button>
+          <button class="nav-link" data-page="publicOverview" data-roles="admin,ngo,volunteer">Community events</button>
+        </nav>
+
+        <button id="logoutButton" class="btn btn-outline logout-button">Log out</button>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">COMMUNITY MANAGEMENT</p>
+            <h1 id="pageCrumb">Overview</h1>
+          </div>
+          <div class="topbar-right">
+            <div class="notification-indicator"><span class="notification-dot"></span> Live dashboard</div>
+            <div id="topAvatar" class="avatar avatar-small">U</div>
+          </div>
+        </header>
+
+        <div id="globalMessage" class="message global-message" role="status"></div>
+
+        <!-- OVERVIEW -->
+        <section id="dashboard" class="page-section">
+          <div class="welcome-card">
+            <div>
+              <p class="eyebrow">YOUR COMMUNITY AT A GLANCE</p>
+              <h2 id="welcomeTitle">Welcome back!</h2>
+              <p id="welcomeSubtitle">Manage your community activities here.</p>
+            </div>
+            <div class="welcome-icon">✦</div>
+          </div>
+
+          <div class="stats-grid">
+            <article class="stat-card"><span>Total volunteers</span><strong id="volunteerCount">0</strong><small>Registered members</small></article>
+            <article class="stat-card"><span>Verified NGOs</span><strong id="ngoCount">0</strong><small>Approved organisations</small></article>
+            <article class="stat-card"><span>Upcoming events</span><strong id="upcomingCount">0</strong><small>Approved opportunities</small></article>
+            <article class="stat-card"><span>My participation</span><strong id="completedCount">0</strong><small>Events joined</small></article>
+          </div>
+
+          <div class="section-heading">
+            <div><h2>Recent activity</h2><p class="muted">Updates relevant to your account</p></div>
+          </div>
+          <div id="activityList" class="activity-list">
+            <p class="empty-state">Your updates will appear here.</p>
+          </div>
+        </section>
+
+        <!-- ADMIN NGO APPROVALS -->
+        <section id="adminPanel" class="page-section" hidden>
+          <div class="section-heading">
+            <div><h2>NGO approval requests</h2><p class="muted">Review organisations before they can publish events.</p></div>
+          </div>
+          <div class="table-card">
+            <div class="table-heading"><strong>Pending organisations</strong><span class="pill pill-pending" id="pendingNgoCount">0 pending</span></div>
+            <div class="table-scroll">
+              <table>
+                <thead><tr><th>Organisation</th><th>Email</th><th>Location</th><th>Submitted</th><th>Actions</th></tr></thead>
+                <tbody id="pendingNgoTableBody"><tr><td colspan="5" class="empty-cell">No pending requests.</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ADMIN EVENT APPROVALS -->
+        <section id="adminEventsPanel" class="page-section" hidden>
+          <div class="section-heading">
+            <div><h2>Event approval requests</h2><p class="muted">Approve events before volunteers can discover them.</p></div>
+          </div>
+          <div class="table-card">
+            <div class="table-heading"><strong>Pending events</strong><span class="pill pill-pending" id="pendingEventCount">0 pending</span></div>
+            <div class="table-scroll">
+              <table>
+                <thead><tr><th>Event</th><th>NGO</th><th>Date & time</th><th>Location</th><th>Actions</th></tr></thead>
+                <tbody id="pendingEventTableBody"><tr><td colspan="5" class="empty-cell">No pending event requests.</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ADMIN TABLES -->
+        <section id="adminDataPanel" class="page-section" hidden>
+          <div class="section-heading"><div><h2>Management tables</h2><p class="muted">View registered community members and events.</p></div></div>
+          <div class="table-card">
+            <div class="table-heading"><strong>NGO directory</strong></div>
+            <div class="table-scroll"><table><thead><tr><th>NGO</th><th>Email</th><th>Location</th><th>Status</th></tr></thead><tbody id="ngoTableBody"></tbody></table></div>
+          </div>
+          <div class="table-card spaced-card">
+            <div class="table-heading"><strong>Volunteer directory</strong></div>
+            <div class="table-scroll"><table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Interests</th></tr></thead><tbody id="volunteerTableBody"></tbody></table></div>
+          </div>
+          <div class="table-card spaced-card">
+            <div class="table-heading"><strong>All events</strong></div>
+            <div class="table-scroll"><table><thead><tr><th>Event</th><th>NGO</th><th>Date</th><th>Location</th><th>Status</th></tr></thead><tbody id="eventTableBody"></tbody></table></div>
+          </div>
+        </section>
+
+        <!-- NGO DASHBOARD -->
+        <section id="ngoPanel" class="page-section" hidden>
+          <div id="ngoStatusBanner" class="status-banner"></div>
+          <div class="section-heading">
+            <div><h2>My events</h2><p class="muted">Create events and track admin decisions.</p></div>
+            <button id="showEventForm" class="btn btn-primary">+ Create event</button>
+          </div>
+
+          <div id="eventFormCard" class="form-card" hidden>
+            <h3>Create a community event</h3>
+            <form id="eventForm">
+              <label for="eventTitle">Event title</label><input id="eventTitle" required maxlength="150" placeholder="Community food drive">
+              <label for="eventDescription">Description</label><textarea id="eventDescription" rows="3" required placeholder="What will volunteers do?"></textarea>
+              <div class="form-grid">
+                <div><label for="eventDate">Event date</label><input id="eventDate" type="date" required></div>
+                <div><label for="eventLocation">Exact location</label><input id="eventLocation" required placeholder="Venue and area"></div>
+                <div><label for="eventStartTime">Start time</label><input id="eventStartTime" type="time" required></div>
+                <div><label for="eventEndTime">End time</label><input id="eventEndTime" type="time" required></div>
+                <div><label for="eventCapacity">Volunteer capacity</label><input id="eventCapacity" type="number" min="1" max="10000" value="20" required></div>
+              </div>
+              <div class="form-actions"><button class="btn btn-primary" type="submit">Submit for approval</button><button id="hideEventForm" class="btn btn-outline" type="button">Cancel</button></div>
+              <p id="eventMessage" class="message" role="status"></p>
+            </form>
+          </div>
+
+          <div class="table-card">
+            <div class="table-heading"><strong>Events submitted by my NGO</strong></div>
+            <div class="table-scroll"><table><thead><tr><th>Event</th><th>Date & time</th><th>Location</th><th>Participants</th><th>Status</th></tr></thead><tbody id="myEventsBody"></tbody></table></div>
+          </div>
+        </section>
+
+        <!-- VOLUNTEER DASHBOARD -->
+        <section id="volunteerPanel" class="page-section" hidden>
+          <div class="section-heading"><div><h2>Discover opportunities</h2><p class="muted">Explore approved events and take part.</p></div></div>
+          <div id="publicEventGrid" class="event-grid"></div>
+
+          <div class="section-heading spaced-heading"><div><h2>My registered events</h2><p class="muted">Events you have chosen to participate in.</p></div></div>
+          <div class="table-card">
+            <div class="table-scroll"><table><thead><tr><th>Event</th><th>Date & time</th><th>Location</th><th>Registration</th></tr></thead><tbody id="joinedEventsTableBody"></tbody></table></div>
+          </div>
+        </section>
+
+        <!-- PUBLIC DIRECTORY -->
+        <section id="publicOverview" class="page-section" hidden>
+          <div class="section-heading"><div><h2>Community directory</h2><p class="muted">Approved events and verified organisations.</p></div></div>
+          <div class="table-card">
+            <div class="table-heading"><strong>Approved NGOs</strong></div>
+            <div class="table-scroll"><table><thead><tr><th>Organisation</th><th>Location</th><th>About</th></tr></thead><tbody id="ngoDirectoryBody"></tbody></table></div>
+          </div>
+          <div class="table-card spaced-card">
+            <div class="table-heading"><strong>Approved events</strong></div>
+            <div class="table-scroll"><table><thead><tr><th>Event</th><th>Organiser</th><th>Date & time</th><th>Location</th></tr></thead><tbody id="publicEventTableBody"></tbody></table></div>
+          </div>
+        </section>
+      </main>
+    </section>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
