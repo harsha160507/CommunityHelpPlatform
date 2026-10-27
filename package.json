@@ -1,19 +1,43 @@
-
 {
   "name": "community-help-platform",
-  "version": "1.0.0",
-  "description": "Community Help Platform for NGOs and volunteers",
-  "main": "server.js",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Community events, NGO review and volunteer participation",
+  "engines": {
+    "node": "^22.13.0 || ^24.0.0 || ^26.0.0"
+  },
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "start": "node backend/src/server.js",
+    "dev": "node --watch backend/src/server.js",
+    "migrate": "node backend/scripts/migrate.js",
+    "admin:setup": "node backend/scripts/admin.js",
+    "mail:preview": "node backend/scripts/mail-preview.js",
+    "check": "node scripts/check.js",
+    "test": "node --test tests/unit/*.test.js",
+    "test:integration": "node --test --test-concurrency=1 tests/integration/*.test.js",
+    "test:e2e": "node --test --test-concurrency=1 tests/e2e/*.test.js",
+    "lint": "eslint backend frontend scripts tests eslint.config.js",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "cors": "^2.8.5",
+    "bcryptjs": "^3.0.2",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "jsonwebtoken": "^9.0.2",
-    "mysql2": "^3.12.0"
-  }
+    "express-rate-limit": "^8.0.0",
+    "helmet": "^8.0.0",
+    "luxon": "^3.5.0",
+    "mysql2": "^3.12.0",
+    "nodemailer": "^10.2.1"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.64.1",
+    "eslint": "^10.13.0",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.10",
+    "supertest": "^7.0.0"
+  },
+  "license": "UNLICENSED"
 }
