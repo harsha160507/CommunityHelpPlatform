@@ -1,0 +1,24 @@
+flowchart LR
+    accTitle: Use cases - administration and review
+    accDescr: Administrators review NGO registrations and events, manage volunteer access and inspect audit history. Rejection and approval revocation require feedback.
+    Admin["«actor»<br/>Administrator"]
+
+    subgraph System["Community Help Platform · Administration"]
+        NGOs(["Review NGOs:<br/>approve, reject or restore"])
+        Events(["Review events:<br/>approve, reject or revoke"])
+        Access(["Disable or restore<br/>volunteer access"])
+        Audit(["Inspect recorded<br/>action history"])
+        Reason(["Provide rejection<br/>or revocation reason"])
+    end
+
+    Admin --- NGOs
+    Admin --- Events
+    Admin --- Access
+    Admin --- Audit
+    Reason -.->|"«extend»: rejection decision"| NGOs
+    Reason -.->|"«extend»: rejection decision"| Events
+
+    classDef actor fill:#eff6ff,stroke:#2563eb,color:#172554
+    classDef usecase fill:#ffffff,stroke:#7c3aed,color:#3b0764
+    class Admin actor
+    class NGOs,Events,Access,Audit,Reason usecase

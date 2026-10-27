@@ -1,0 +1,79 @@
+flowchart TB
+    accTitle: Level 1 data-flow diagram - five platform processes
+    accDescr: Five process panels reuse store identifiers for the same shared database records. Portal actor requests and responses connect to accounts, event management, enrollment, and discovery. The mail process exchanges messages with SMTP.
+
+    subgraph L1["1.0 · Accounts and sessions"]
+        direction LR
+        U1["Guest / Volunteer / NGO / Admin"]
+        P1("1.0<br/>Manage accounts<br/>and sessions")
+        D1a[("D1 · Accounts and access")]
+        D4a[("D4 · Activity and audit")]
+        D5a[("D5 · Mail outbox")]
+        U1 <-->|"Account requests / results"| P1
+        P1 <-->|"Profiles, sessions, tokens"| D1a
+        P1 -->|"Account activity"| D4a
+        P1 -->|"Account email payloads"| D5a
+    end
+
+    subgraph L2["2.0 · Moderation and event lifecycle"]
+        direction LR
+        U2["NGO / Volunteer / Admin"]
+        P2("2.0<br/>Review accounts and<br/>manage event lifecycle")
+        D1b[("D1 · Accounts and access")]
+        D2b[("D2 · Events and request keys")]
+        D3b[("D3 · Participants")]
+        D4b[("D4 · Activity and audit")]
+        U2 <-->|"Review, event and participation changes / results"| P2
+        P2 <-->|"Account review and access state"| D1b
+        P2 <-->|"Event records and submission keys"| D2b
+        P2 <-->|"Counts, withdrawal, attendance"| D3b
+        P2 -->|"Review and event notices"| D4b
+    end
+
+    subgraph L3["3.0 · Volunteer enrollment"]
+        direction LR
+        U3["Volunteer"]
+        P3("3.0<br/>Register volunteer<br/>for an event")
+        D1c[("D1 · Accounts and access")]
+        D2c[("D2 · Events and request keys")]
+        D3c[("D3 · Participants")]
+        D4c[("D4 · Activity and audit")]
+        U3 <-->|"Join request / enrollment result"| P3
+        D1c -->|"Current user and organizer"| P3
+        D2c -->|"Event eligibility"| P3
+        P3 <-->|"Membership and capacity data"| D3c
+        P3 -->|"Participation notice and audit"| D4c
+    end
+
+    subgraph L4["4.0 · Discovery and permitted views"]
+        direction LR
+        U4["Guest / Volunteer / NGO / Admin"]
+        P4("4.0<br/>Provide discovery,<br/>rosters and activity")
+        D1d[("D1 · Accounts and access")]
+        D2d[("D2 · Events and request keys")]
+        D3d[("D3 · Participants")]
+        D4d[("D4 · Activity and audit")]
+        U4 <-->|"View queries / permitted data"| P4
+        D1d -->|"NGOs, identities and access context"| P4
+        D2d -->|"Event details and status"| P4
+        D3d -->|"Membership, counts and attendance"| P4
+        D4d -->|"Personal activity and audit history"| P4
+    end
+
+    subgraph L5["5.0 · Account email delivery"]
+        direction LR
+        D5b[("D5 · Mail outbox")]
+        P5("5.0<br/>Deliver queued<br/>account email")
+        M["SMTP provider"]
+        D5b <-->|"Queued messages / send state"| P5
+        P5 <-->|"Email payload / send response"| M
+    end
+
+    L1 ~~~ L2 ~~~ L3 ~~~ L4 ~~~ L5
+
+    classDef actor fill:#eff6ff,stroke:#2563eb,color:#172554
+    classDef process fill:#ecfdf5,stroke:#059669,color:#064e3b
+    classDef store fill:#fff7ed,stroke:#ea580c,color:#7c2d12
+    class U1,U2,U3,U4,M actor
+    class P1,P2,P3,P4,P5 process
+    class D1a,D1b,D1c,D1d,D2b,D2c,D2d,D3b,D3c,D3d,D4a,D4b,D4c,D4d,D5a,D5b store

@@ -1,0 +1,32 @@
+flowchart LR
+    accTitle: Use cases - discovery and accounts
+    accDescr: Signed-out visitors can discover events, register, verify email and request recovery. Account holders can sign in or out, maintain profiles and read activity. Only NGO and volunteer accounts have self-service deletion.
+    Visitor["«actor»<br/>Guest / signed-out visitor"]
+    Member["«actor»<br/>Account holder<br/>Volunteer · NGO · Admin"]
+    Personal["«actor»<br/>NGO / Volunteer"]
+
+    subgraph System["Community Help Platform · Discovery and accounts"]
+        Browse(["Browse approved NGOs<br/>and upcoming events"])
+        Register(["Register as NGO<br/>or volunteer"])
+        Verify(["Verify email address"])
+        Recover(["Request verification<br/>or password recovery"])
+        SignIn(["Sign in / sign out"])
+        Profile(["Update profile<br/>or change password"])
+        Activity(["Read personal activity"])
+        Delete(["Delete own account"])
+    end
+
+    Visitor --- Browse
+    Visitor --- Register
+    Visitor --- Verify
+    Visitor --- Recover
+    Member --- Browse
+    Member --- SignIn
+    Member --- Profile
+    Member --- Activity
+    Personal --- Delete
+
+    classDef actor fill:#eff6ff,stroke:#2563eb,color:#172554
+    classDef usecase fill:#ffffff,stroke:#7c3aed,color:#3b0764
+    class Visitor,Member,Personal actor
+    class Browse,Register,Verify,Recover,SignIn,Profile,Activity,Delete usecase

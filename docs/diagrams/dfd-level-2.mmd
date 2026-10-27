@@ -1,0 +1,35 @@
+flowchart TB
+    accTitle: Level 2 data-flow diagram - volunteer enrollment
+    accDescr: Process 3.0 expands into five steps that validate the current session, read and lock event eligibility, check membership and capacity, insert a registration and record activity. All inputs, outputs and stores match the parent enrollment process.
+    V["Volunteer"]
+    D1[("D1 · Accounts and access")]
+    D2[("D2 · Events and request keys")]
+    D3[("D3 · Participants")]
+    D4[("D4 · Activity and audit")]
+
+    P31("3.1<br/>Validate volunteer<br/>session and account")
+    P32("3.2<br/>Read and lock<br/>organizer and event")
+    P33("3.3<br/>Validate eligibility,<br/>membership and capacity")
+    P34("3.4<br/>Insert participant<br/>record")
+    P35("3.5<br/>Record activity and<br/>commit transaction")
+
+    V -->|"Event ID and session token"| P31
+    D1 -->|"Current session and account"| P31
+    P31 -->|"Authenticated volunteer request"| P32
+    D1 -->|"Organizer approval and access"| P32
+    D2 -->|"Event owner, date, status and capacity"| P32
+    P32 -->|"Locked event and organizer data"| P33
+    D3 -->|"Existing membership and current count"| P33
+    P33 -->|"Eligible registration data"| P34
+    P33 -->|"Unavailable, duplicate or full result"| V
+    P34 -->|"New participant record"| D3
+    P34 -->|"Participation action data"| P35
+    P35 -->|"Personal notice and audit entry"| D4
+    P35 -->|"Committed registration confirmation"| V
+
+    classDef actor fill:#eff6ff,stroke:#2563eb,color:#172554
+    classDef process fill:#ecfdf5,stroke:#059669,color:#064e3b
+    classDef store fill:#fff7ed,stroke:#ea580c,color:#7c2d12
+    class V actor
+    class P31,P32,P33,P34,P35 process
+    class D1,D2,D3,D4 store

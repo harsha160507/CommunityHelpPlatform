@@ -2,9 +2,9 @@
 
 <h1>🤝 Community Help Platform</h1>
 
-<p><strong>Local causes. Shared effort. Meaningful change.</strong></p>
+<p><strong>Where local causes become collective action.</strong></p>
 
-<p>A shared space for NGOs to organize community events,<br>volunteers to find opportunities, and administrators to keep everything moving.</p>
+<p>Discover a cause. Organize an opportunity. Bring people together.<br>A community platform connecting volunteers, NGOs, and the people who support them.</p>
 
 <p>
   <a href="https://github.com/harsha160507/CommunityHelpPlatform/actions/workflows/ci.yml"><img src="https://github.com/harsha160507/CommunityHelpPlatform/actions/workflows/ci.yml/badge.svg?branch=main" alt="Continuous integration status"></a>
@@ -14,24 +14,27 @@
 </p>
 
 <p>
-  <a href="#features">Features</a> ·
-  <a href="#getting-started">Get started</a> ·
-  <a href="#project-structure">Project structure</a> ·
-  <a href="#documentation">Documentation</a> ·
-  <a href="CONTRIBUTING.md">Contribute</a>
+  <a href="#features">Explore features</a> ·
+  <a href="#system-architecture">Architecture</a> ·
+  <a href="#data-flow-diagrams">Data flow</a> ·
+  <a href="#use-case-diagrams">Use cases</a> ·
+  <a href="#getting-started">Run locally</a> ·
+  <a href="#documentation">Documentation</a>
 </p>
 
 </div>
 
 ---
 
-## About the project
+## The idea
 
-Community service starts with people who want to help—and organizations that know where help is needed.
+Good intentions need a place to become action. **Community Help Platform** gives NGOs a way to organize local events, volunteers a way to find opportunities, and administrators a way to review what is published.
 
-**Community Help Platform brings them together.** NGOs submit opportunities, administrators review them, and volunteers discover approved events and choose where to participate. From registration to attendance, everyone can follow the progress of an event in one place.
+The result is one connected journey: **discover → review → participate → follow through**.
 
-Built with **HTML, CSS, JavaScript, Node.js, Express, and MySQL**, the application serves its frontend and API from the same origin.
+| For volunteers                                        | For NGOs                                                                      | For administrators                                                               |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Find approved opportunities and choose where to help. | Turn community needs into events with clear capacity and participant records. | Review submissions, provide feedback, and keep a traceable history of decisions. |
 
 ## Features
 
@@ -55,17 +58,326 @@ Built with **HTML, CSS, JavaScript, Node.js, Express, and MySQL**, the applicati
 | **NGO**           | Submit events, manage participants, update event details, and record attendance. |
 | **Administrator** | Review NGOs and events, manage volunteer access, and inspect action history.     |
 
-### From an idea to an event
+## System architecture
+
+A browser-based frontend and an Express API share one origin. MySQL stores application records, while a background worker sends verification and recovery email through SMTP.
+
+| Layer              | Responsibility                                                                     | Implementation                                             |
+| ------------------ | ---------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| **Presentation**   | Public discovery, account screens, event management, and role-based dashboards.    | HTML, CSS, JavaScript in `frontend/`.                      |
+| **Application**    | Authentication, role checks, validation, reviews, enrollment, and permitted views. | Express routes and services in `backend/src/`.             |
+| **Persistence**    | Accounts, hashed sessions/tokens, events, participants, activity, and queued mail. | MySQL with versioned migrations in `database/migrations/`. |
+| **Email delivery** | Read queued account messages, send through SMTP, and record retries or acceptance. | `backend/src/mail.js`.                                     |
+
+The diagrams below describe the implemented project. The [system-design guide](docs/SYSTEM-DESIGN.md) maps processes to code, explains the data stores, and records the diagram boundaries.
+
+## Data flow diagrams
+
+Read these diagrams as **data moving between people, processes, and stores**. Process numbers remain consistent between levels; they are not execution-step numbers.
+
+**Legend:** blue rectangles = external actors · green nodes = processes · orange cylinders = logical data stores. A two-headed link abbreviates read/write or request/response flows named on that link.
+
+### Level 0 — The platform in its environment
+
+The context diagram treats the entire application as one process. It shows what guests, volunteers, NGOs, administrators, and the SMTP provider exchange with it.
 
 ```mermaid
 flowchart LR
-    A["NGO registration"] --> B["Email verification"]
-    B --> C["NGO review"]
-    C -->|Approved| D["Event submission"]
-    D --> E["Event review"]
-    E -->|Approved| F["Volunteers join"]
-    F --> G["Event completion & attendance"]
+    accTitle: Level 0 data-flow diagram - system context
+    accDescr: Guests, volunteers, NGOs and administrators exchange requests and results with the platform. The SMTP provider exchanges account emails and delivery responses.
+    G["Guest"]
+    V["Volunteer"]
+    N["NGO"]
+    A["Administrator"]
+    S(("0<br/>Community Help<br/>Platform"))
+    M["SMTP provider"]
+
+    G -->|"Discovery and signup requests"| S
+    S -->|"Public listings and signup results"| G
+    V -->|"Account and participation requests"| S
+    S -->|"Account results and activity"| V
+    N -->|"Profile and event requests"| S
+    S -->|"Review feedback and rosters"| N
+    A -->|"Review and access decisions"| S
+    S -->|"Review results and history"| A
+    S -->|"Account emails"| M
+    M -->|"Send acceptance or failure"| S
+
+    classDef actor fill:#eff6ff,stroke:#2563eb,color:#172554
+    classDef process fill:#ecfdf5,stroke:#059669,color:#064e3b
+    class G,V,N,A,M actor
+    class S process
 ```
+
+### Level 1 — The five platform processes
+
+The context process expands into account management, moderation/event lifecycle, enrollment, discovery/permitted views, and email delivery.
+
+The panels reuse the **same D1–D5 stores** for readability; repeated store labels are references to shared records, not separate databases. Actor labels identify possible callers—each operation still enforces its own role permissions.
+
+```mermaid
+flowchart TB
+    accTitle: Level 1 data-flow diagram - five platform processes
+    accDescr: Five process panels reuse store identifiers for the same shared database records. Portal actor requests and responses connect to accounts, event management, enrollment, and discovery. The mail process exchanges messages with SMTP.
+
+    subgraph L1["1.0 · Accounts and sessions"]
+        direction LR
+        U1["Guest / Volunteer / NGO / Admin"]
+        P1("1.0<br/>Manage accounts<br/>and sessions")
+        D1a[("D1 · Accounts and access")]
+        D4a[("D4 · Activity and audit")]
+        D5a[("D5 · Mail outbox")]
+        U1 <-->|"Account requests / results"| P1
+        P1 <-->|"Profiles, sessions, tokens"| D1a
+        P1 -->|"Account activity"| D4a
+        P1 -->|"Account email payloads"| D5a
+    end
+
+    subgraph L2["2.0 · Moderation and event lifecycle"]
+        direction LR
+        U2["NGO / Volunteer / Admin"]
+        P2("2.0<br/>Review accounts and<br/>manage event lifecycle")
+        D1b[("D1 · Accounts and access")]
+        D2b[("D2 · Events and request keys")]
+        D3b[("D3 · Participants")]
+        D4b[("D4 · Activity and audit")]
+        U2 <-->|"Review, event and participation changes / results"| P2
+        P2 <-->|"Account review and access state"| D1b
+        P2 <-->|"Event records and submission keys"| D2b
+        P2 <-->|"Counts, withdrawal, attendance"| D3b
+        P2 -->|"Review and event notices"| D4b
+    end
+
+    subgraph L3["3.0 · Volunteer enrollment"]
+        direction LR
+        U3["Volunteer"]
+        P3("3.0<br/>Register volunteer<br/>for an event")
+        D1c[("D1 · Accounts and access")]
+        D2c[("D2 · Events and request keys")]
+        D3c[("D3 · Participants")]
+        D4c[("D4 · Activity and audit")]
+        U3 <-->|"Join request / enrollment result"| P3
+        D1c -->|"Current user and organizer"| P3
+        D2c -->|"Event eligibility"| P3
+        P3 <-->|"Membership and capacity data"| D3c
+        P3 -->|"Participation notice and audit"| D4c
+    end
+
+    subgraph L4["4.0 · Discovery and permitted views"]
+        direction LR
+        U4["Guest / Volunteer / NGO / Admin"]
+        P4("4.0<br/>Provide discovery,<br/>rosters and activity")
+        D1d[("D1 · Accounts and access")]
+        D2d[("D2 · Events and request keys")]
+        D3d[("D3 · Participants")]
+        D4d[("D4 · Activity and audit")]
+        U4 <-->|"View queries / permitted data"| P4
+        D1d -->|"NGOs, identities and access context"| P4
+        D2d -->|"Event details and status"| P4
+        D3d -->|"Membership, counts and attendance"| P4
+        D4d -->|"Personal activity and audit history"| P4
+    end
+
+    subgraph L5["5.0 · Account email delivery"]
+        direction LR
+        D5b[("D5 · Mail outbox")]
+        P5("5.0<br/>Deliver queued<br/>account email")
+        M["SMTP provider"]
+        D5b <-->|"Queued messages / send state"| P5
+        P5 <-->|"Email payload / send response"| M
+    end
+
+    L1 ~~~ L2 ~~~ L3 ~~~ L4 ~~~ L5
+
+    classDef actor fill:#eff6ff,stroke:#2563eb,color:#172554
+    classDef process fill:#ecfdf5,stroke:#059669,color:#064e3b
+    classDef store fill:#fff7ed,stroke:#ea580c,color:#7c2d12
+    class U1,U2,U3,U4,M actor
+    class P1,P2,P3,P4,P5 process
+    class D1a,D1b,D1c,D1d,D2b,D2c,D2d,D3b,D3c,D3d,D4a,D4b,D4c,D4d,D5a,D5b store
+```
+
+| Store                            | Records represented                                           |
+| -------------------------------- | ------------------------------------------------------------- |
+| **D1 · Accounts and access**     | `chp_users`, `chp_sessions`, `chp_account_tokens`.            |
+| **D2 · Events and request keys** | `chp_events`, `chp_event_requests`.                           |
+| **D3 · Participants**            | `chp_event_participants`, including attendance.               |
+| **D4 · Activity and audit**      | `chp_notifications`, `chp_audit_log`.                         |
+| **D5 · Mail outbox**             | `chp_mail_outbox`, including send attempts and message state. |
+
+### Level 2 — Inside volunteer enrollment
+
+This level decomposes **process 3.0** into the checks and writes behind joining an event. It retains the parent process's volunteer actor, enrollment result, and D1–D4 stores.
+
+```mermaid
+flowchart TB
+    accTitle: Level 2 data-flow diagram - volunteer enrollment
+    accDescr: Process 3.0 expands into five steps that validate the current session, read and lock event eligibility, check membership and capacity, insert a registration and record activity. All inputs, outputs and stores match the parent enrollment process.
+    V["Volunteer"]
+    D1[("D1 · Accounts and access")]
+    D2[("D2 · Events and request keys")]
+    D3[("D3 · Participants")]
+    D4[("D4 · Activity and audit")]
+
+    P31("3.1<br/>Validate volunteer<br/>session and account")
+    P32("3.2<br/>Read and lock<br/>organizer and event")
+    P33("3.3<br/>Validate eligibility,<br/>membership and capacity")
+    P34("3.4<br/>Insert participant<br/>record")
+    P35("3.5<br/>Record activity and<br/>commit transaction")
+
+    V -->|"Event ID and session token"| P31
+    D1 -->|"Current session and account"| P31
+    P31 -->|"Authenticated volunteer request"| P32
+    D1 -->|"Organizer approval and access"| P32
+    D2 -->|"Event owner, date, status and capacity"| P32
+    P32 -->|"Locked event and organizer data"| P33
+    D3 -->|"Existing membership and current count"| P33
+    P33 -->|"Eligible registration data"| P34
+    P33 -->|"Unavailable, duplicate or full result"| V
+    P34 -->|"New participant record"| D3
+    P34 -->|"Participation action data"| P35
+    P35 -->|"Personal notice and audit entry"| D4
+    P35 -->|"Committed registration confirmation"| V
+
+    classDef actor fill:#eff6ff,stroke:#2563eb,color:#172554
+    classDef process fill:#ecfdf5,stroke:#059669,color:#064e3b
+    classDef store fill:#fff7ed,stroke:#ea580c,color:#7c2d12
+    class V actor
+    class P31,P32,P33,P34,P35 process
+    class D1,D2,D3,D4 store
+```
+
+**The enrollment guarantee:** an active, verified volunteer can join only an approved future event from an approved, active NGO, once, and while capacity remains. Organizer/event locks and one transaction protect the participant record, personal notice, and audit entry. Confirmation is returned only after commit; failures roll back the writes.
+
+Other process families remain at Level 1. Withdrawal, attendance, roster reading, and moderation are documented separately in the [process map and rules](docs/SYSTEM-DESIGN.md).
+
+## Use case diagrams
+
+These UML-style views show **who can do what**, using GitHub-compatible Mermaid shapes: actor boxes outside a system boundary and oval use cases inside it.
+
+**Legend:** solid lines = actor participation · **«include»** = required behavior · **«extend»** = behavior added under a stated condition. Authentication and ownership checks are preconditions for protected operations, rather than a repeated sign-in step.
+
+### 1. Discovery and account access
+
+Guests can explore before registering. Account holders manage their access and personal activity; self-service account deletion is available to NGOs and volunteers.
+
+```mermaid
+flowchart LR
+    accTitle: Use cases - discovery and accounts
+    accDescr: Signed-out visitors can discover events, register, verify email and request recovery. Account holders can sign in or out, maintain profiles and read activity. Only NGO and volunteer accounts have self-service deletion.
+    Visitor["«actor»<br/>Guest / signed-out visitor"]
+    Member["«actor»<br/>Account holder<br/>Volunteer · NGO · Admin"]
+    Personal["«actor»<br/>NGO / Volunteer"]
+
+    subgraph System["Community Help Platform · Discovery and accounts"]
+        Browse(["Browse approved NGOs<br/>and upcoming events"])
+        Register(["Register as NGO<br/>or volunteer"])
+        Verify(["Verify email address"])
+        Recover(["Request verification<br/>or password recovery"])
+        SignIn(["Sign in / sign out"])
+        Profile(["Update profile<br/>or change password"])
+        Activity(["Read personal activity"])
+        Delete(["Delete own account"])
+    end
+
+    Visitor --- Browse
+    Visitor --- Register
+    Visitor --- Verify
+    Visitor --- Recover
+    Member --- Browse
+    Member --- SignIn
+    Member --- Profile
+    Member --- Activity
+    Personal --- Delete
+
+    classDef actor fill:#eff6ff,stroke:#2563eb,color:#172554
+    classDef usecase fill:#ffffff,stroke:#7c3aed,color:#3b0764
+    class Visitor,Member,Personal actor
+    class Browse,Register,Verify,Recover,SignIn,Profile,Activity,Delete usecase
+```
+
+### 2. Volunteering and NGO event management
+
+Volunteers manage their participation. NGOs manage owned events, participant rosters, and attendance. Joining includes the eligibility/capacity check; event creation and edits remain subject to review.
+
+```mermaid
+flowchart LR
+    accTitle: Use cases - volunteering and NGO event management
+    accDescr: Volunteers register, withdraw and view their events. NGOs submit and edit events, cancel or complete them, view their rosters and record attendance. Joining always includes eligibility and capacity checks.
+    Volunteer["«actor»<br/>Volunteer"]
+    NGO["«actor»<br/>NGO"]
+
+    subgraph System["Community Help Platform · Events and participation"]
+        Join(["Join an event"])
+        Rules(["Check event eligibility<br/>and available capacity"])
+        Withdraw(["Withdraw registration"])
+        Mine(["View own registrations<br/>and current event status"])
+        Submit(["Create or edit an event<br/>and submit for review"])
+        Close(["Cancel or complete<br/>an owned event"])
+        Roster(["View owned-event<br/>participant roster"])
+        Attendance(["Record attendance<br/>for a completed event"])
+    end
+
+    Volunteer --- Join
+    Volunteer --- Withdraw
+    Volunteer --- Mine
+    NGO --- Submit
+    NGO --- Close
+    NGO --- Roster
+    NGO --- Attendance
+    Join -.->|"«include»"| Rules
+
+    classDef actor fill:#eff6ff,stroke:#2563eb,color:#172554
+    classDef usecase fill:#ffffff,stroke:#7c3aed,color:#3b0764
+    class Volunteer,NGO actor
+    class Join,Rules,Withdraw,Mine,Submit,Close,Roster,Attendance usecase
+```
+
+### 3. Administration and review
+
+Administrators review NGOs and events, manage volunteer access, and inspect recorded actions. Rejecting or revoking approval adds the required reason to the decision.
+
+```mermaid
+flowchart LR
+    accTitle: Use cases - administration and review
+    accDescr: Administrators review NGO registrations and events, manage volunteer access and inspect audit history. Rejection and approval revocation require feedback.
+    Admin["«actor»<br/>Administrator"]
+
+    subgraph System["Community Help Platform · Administration"]
+        NGOs(["Review NGOs:<br/>approve, reject or restore"])
+        Events(["Review events:<br/>approve, reject or revoke"])
+        Access(["Disable or restore<br/>volunteer access"])
+        Audit(["Inspect recorded<br/>action history"])
+        Reason(["Provide rejection<br/>or revocation reason"])
+    end
+
+    Admin --- NGOs
+    Admin --- Events
+    Admin --- Access
+    Admin --- Audit
+    Reason -.->|"«extend»: rejection decision"| NGOs
+    Reason -.->|"«extend»: rejection decision"| Events
+
+    classDef actor fill:#eff6ff,stroke:#2563eb,color:#172554
+    classDef usecase fill:#ffffff,stroke:#7c3aed,color:#3b0764
+    class Admin actor
+    class NGOs,Events,Access,Audit,Reason usecase
+```
+
+<details>
+<summary><strong>Permission and lifecycle details</strong></summary>
+
+- Volunteers must verify their email before signing in. NGOs must also be approved before creating or editing events.
+- Rejected NGOs may sign in to correct and resubmit their profile.
+- Public browsing exposes only approved, scheduled, future events from active approved NGOs.
+- Volunteers may withdraw from unavailable or cancelled events; completed attendance records remain.
+- An NGO can read only its own participant rosters. Recording attendance also requires an approved organizer and a completed event.
+- Cancellation and completion are distinct actions with different eligibility rules.
+- Administrator review uses the current record version/status to prevent stale decisions.
+
+See [API permissions](docs/API.md) and [diagram scope](docs/SYSTEM-DESIGN.md) for the exact boundaries.
+
+</details>
 
 ## Getting started
 
@@ -228,14 +540,15 @@ CI covers Node.js **22, 24, and 26** with MySQL. Browser checks run on Node.js 2
 
 ## Documentation
 
-| Guide                                          | What you will find                                                                        |
-| ---------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| [API reference](docs/API.md)                   | Endpoints, authentication, pagination, responses, and role permissions.                   |
-| [Deployment & maintenance](docs/DEPLOYMENT.md) | Production setup, SMTP, migrations, monitoring, backups, and recovery.                    |
-| [Fix report](docs/FIX-REPORT.md)               | The 36 audit findings, implemented improvements, validation, and remaining owner actions. |
-| [Security response](docs/SECURITY-RESPONSE.md) | Required steps for credentials exposed by earlier versions.                               |
-| [Contributing](CONTRIBUTING.md)                | Development expectations and the contribution workflow.                                   |
-| [Security policy](SECURITY.md)                 | How to report security concerns responsibly.                                              |
+| Guide                                                  | What you will find                                                                        |
+| ------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| [System design & diagram guide](docs/SYSTEM-DESIGN.md) | Process-to-code mapping, store dictionary, and diagram notation and scope.                |
+| [API reference](docs/API.md)                           | Endpoints, authentication, pagination, responses, and role permissions.                   |
+| [Deployment & maintenance](docs/DEPLOYMENT.md)         | Production setup, SMTP, migrations, monitoring, backups, and recovery.                    |
+| [Fix report](docs/FIX-REPORT.md)                       | The 36 audit findings, implemented improvements, validation, and remaining owner actions. |
+| [Security response](docs/SECURITY-RESPONSE.md)         | Required steps for credentials exposed by earlier versions.                               |
+| [Contributing](CONTRIBUTING.md)                        | Development expectations and the contribution workflow.                                   |
+| [Security policy](SECURITY.md)                         | How to report security concerns responsibly.                                              |
 
 <details>
 <summary><strong>Upgrading an existing installation?</strong></summary>

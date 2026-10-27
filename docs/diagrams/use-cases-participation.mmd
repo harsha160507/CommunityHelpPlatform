@@ -1,0 +1,30 @@
+flowchart LR
+    accTitle: Use cases - volunteering and NGO event management
+    accDescr: Volunteers register, withdraw and view their events. NGOs submit and edit events, cancel or complete them, view their rosters and record attendance. Joining always includes eligibility and capacity checks.
+    Volunteer["«actor»<br/>Volunteer"]
+    NGO["«actor»<br/>NGO"]
+
+    subgraph System["Community Help Platform · Events and participation"]
+        Join(["Join an event"])
+        Rules(["Check event eligibility<br/>and available capacity"])
+        Withdraw(["Withdraw registration"])
+        Mine(["View own registrations<br/>and current event status"])
+        Submit(["Create or edit an event<br/>and submit for review"])
+        Close(["Cancel or complete<br/>an owned event"])
+        Roster(["View owned-event<br/>participant roster"])
+        Attendance(["Record attendance<br/>for a completed event"])
+    end
+
+    Volunteer --- Join
+    Volunteer --- Withdraw
+    Volunteer --- Mine
+    NGO --- Submit
+    NGO --- Close
+    NGO --- Roster
+    NGO --- Attendance
+    Join -.->|"«include»"| Rules
+
+    classDef actor fill:#eff6ff,stroke:#2563eb,color:#172554
+    classDef usecase fill:#ffffff,stroke:#7c3aed,color:#3b0764
+    class Volunteer,NGO actor
+    class Join,Rules,Withdraw,Mine,Submit,Close,Roster,Attendance usecase

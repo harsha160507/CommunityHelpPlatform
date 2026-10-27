@@ -1,0 +1,25 @@
+flowchart LR
+    accTitle: Level 0 data-flow diagram - system context
+    accDescr: Guests, volunteers, NGOs and administrators exchange requests and results with the platform. The SMTP provider exchanges account emails and delivery responses.
+    G["Guest"]
+    V["Volunteer"]
+    N["NGO"]
+    A["Administrator"]
+    S(("0<br/>Community Help<br/>Platform"))
+    M["SMTP provider"]
+
+    G -->|"Discovery and signup requests"| S
+    S -->|"Public listings and signup results"| G
+    V -->|"Account and participation requests"| S
+    S -->|"Account results and activity"| V
+    N -->|"Profile and event requests"| S
+    S -->|"Review feedback and rosters"| N
+    A -->|"Review and access decisions"| S
+    S -->|"Review results and history"| A
+    S -->|"Account emails"| M
+    M -->|"Send acceptance or failure"| S
+
+    classDef actor fill:#eff6ff,stroke:#2563eb,color:#172554
+    classDef process fill:#ecfdf5,stroke:#059669,color:#064e3b
+    class G,V,N,A,M actor
+    class S process
