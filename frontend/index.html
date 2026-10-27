@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      name="description"
+      content="Discover community events and volunteer with approved NGOs."
+    />
+    <title>Community Help Platform</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <div id="appView">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="brand-mark" aria-hidden="true">CH</div>
+          <strong>Community Help</strong>
+        </div>
+        <div class="profile-mini">
+          <div>
+            <strong id="profileName">Community explorer</strong
+            ><small id="profileRole">Guest</small>
+          </div>
+        </div>
+        <nav id="sideNav" aria-label="Main navigation"></nav>
+        <button
+          id="logout"
+          class="btn btn-outline logout-button"
+          type="button"
+          hidden
+        >
+          Log out
+        </button>
+      </aside>
+      <main id="main" class="main-content" tabindex="-1">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">CONNECT · PARTICIPATE · HELP</p>
+            <h1 id="pageTitle" tabindex="-1">Community events</h1>
+          </div>
+          <button id="refresh" type="button" class="btn btn-outline">
+            Refresh
+          </button>
+        </header>
+        <p id="notice" class="message" role="status" aria-live="polite"></p>
+        <p id="connection" class="muted"></p>
+        <section
+          id="content"
+          aria-label="Page content"
+          aria-busy="true"
+        ></section>
+      </main>
+    </div>
+    <noscript
+      >Please enable JavaScript to browse community opportunities.</noscript
+    >
+  </body>
+</html>
