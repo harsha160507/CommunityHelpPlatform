@@ -1,17 +1,43 @@
 # System design and diagram guide
 
-This guide explains the six diagrams embedded in the [project README](../README.md#data-flow-diagrams). The models describe the implemented Node.js/Express/MySQL application, rather than a proposed future design.
+This guide explains the seven diagrams embedded in the [project README](../README.md#system-architecture): a system architecture diagram, three data-flow levels, and three use-case views. The models describe the implemented Node.js/Express/MySQL application, rather than a proposed future design.
 
 ## Diagram index
 
 | View                     | Purpose                                                                          | Editable source                                                       |
 | ------------------------ | -------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| System architecture      | Running components, process boundaries, database access, and email delivery.     | [system-architecture.mmd](diagrams/system-architecture.mmd)           |
 | Level 0 DFD              | Application boundary and external data exchanges.                                | [dfd-level-0.mmd](diagrams/dfd-level-0.mmd)                           |
 | Level 1 DFD              | Five logical processes and their shared stores.                                  | [dfd-level-1.mmd](diagrams/dfd-level-1.mmd)                           |
 | Level 2 DFD              | Decomposition of process 3.0: volunteer enrollment.                              | [dfd-level-2.mmd](diagrams/dfd-level-2.mmd)                           |
 | Accounts use cases       | Discovery, registration, verification, access, recovery, profiles, and deletion. | [use-cases-accounts.mmd](diagrams/use-cases-accounts.mmd)             |
 | Participation use cases  | Volunteer participation and NGO event operations.                                | [use-cases-participation.mmd](diagrams/use-cases-participation.mmd)   |
 | Administration use cases | Reviews, access changes, and audit history.                                      | [use-cases-administration.mmd](diagrams/use-cases-administration.mmd) |
+
+## System architecture
+
+The architecture diagram models the currently implemented runtime:
+
+| Component               | Where it runs                   | Responsibility                                                                                                                                                       |
+| ----------------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Browser interface       | The user's browser              | Render role-specific screens; send same-origin API requests; keep the current session token in tab-scoped storage.                                                   |
+| Express server          | The Node.js application process | Serve `frontend/`, dispatch `/api` requests, and apply response headers and request handling.                                                                        |
+| Middleware and routes   | The same Node.js process        | Validate request shape, apply account-operation rate limits, resolve current sessions, enforce role permissions, and handle account/admin/event/volunteer endpoints. |
+| Application services    | The same Node.js process        | Apply input/timezone rules, enforce ownership/eligibility, run transactions, and write notifications, audit entries and queued account email.                        |
+| MySQL database          | The configured MySQL server     | Persist the logical stores D1–D5 through the application's shared `mysql2` connection pool.                                                                          |
+| Background email worker | The same Node.js process        | A timer started in `server.js` calls `mail.js` every ten seconds to process eligible outbox records. This is not a separately deployed worker service.               |
+| SMTP provider           | External email infrastructure   | Accept verification/recovery messages over configured TLS SMTP and return the send response.                                                                         |
+
+### Runtime paths
+
+1. **Page loading:** the browser requests the application URL; Express serves HTML/CSS/JavaScript from `frontend/`.
+2. **Application requests:** the browser calls `/api`; applicable middleware/routes check the request and account context, then services query or update MySQL. JSON responses return through the same server.
+3. **Account email:** an account operation queues a verification/reset message in MySQL. The background worker reads that outbox and attempts SMTP delivery, then records acceptance/failure. Queueing and sending are separate operations.
+4. **Personal activity:** account/event/participation operations write database notifications. The browser reads permitted notifications through the API; the overview polls while visible.
+
+The application boundary contains one Node.js process, not independently deployed frontend/API/mailer services. MySQL and the SMTP provider are separate runtime dependencies. There is no browser-to-database or browser-to-SMTP connection.
+
+The diagram is a component view rather than a complete deployment topology. Production HTTPS termination, private networking, credentials, backups and monitoring are operator configuration described in [DEPLOYMENT.md](DEPLOYMENT.md). In development mail-preview mode, messages remain locally inspectable instead of being sent by SMTP.
 
 ## Reading the notation
 

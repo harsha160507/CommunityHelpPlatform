@@ -62,6 +62,56 @@ The result is one connected journey: **discover → review → participate → f
 
 A browser-based frontend and an Express API share one origin. MySQL stores application records, while a background worker sends verification and recovery email through SMTP.
 
+### Component architecture
+
+```mermaid
+flowchart TB
+    accTitle: Community Help Platform system architecture
+    accDescr: Browser users access one Express application serving the frontend and API. Protected routes use current sessions and role checks. Domain services and an in-process email worker share one MySQL database. Only the email worker connects to the external SMTP provider.
+
+    Users["Guest · Volunteer · NGO · Administrator"]
+    Browser["Browser interface<br/>HTML · CSS · JavaScript<br/>frontend/"]
+
+    subgraph Application["Node.js application · one running process"]
+        Web["Express server<br/>Static frontend files + /api"]
+        Routes["Request middleware and routes<br/>Accounts · Administration · Events · Volunteers"]
+        Services["Application services<br/>Validation · Transactions · Notifications · Audit"]
+        Worker["Background email worker<br/>server.js timer → mail.js<br/>Checks the outbox every 10 seconds"]
+    end
+
+    Database[("MySQL application database<br/>Accounts · Sessions · Verification/reset tokens<br/>Events · Participants · Activity · Audit<br/>Mail outbox · Submission keys")]
+    SMTP["External SMTP provider<br/>Verification and recovery email"]
+
+    Users --- Browser
+    Browser <-->|"Same-origin requests / responses"| Web
+    Web <-->|"API requests / JSON results"| Routes
+    Routes <-->|"Validated operations / results"| Services
+    Services <-->|"mysql2 pool: SQL / records"| Database
+    Database <-->|"Queued account mail / send state"| Worker
+    Worker <-->|"SMTP over TLS / send response"| SMTP
+
+    classDef user fill:#eff6ff,stroke:#2563eb,color:#172554
+    classDef app fill:#ecfdf5,stroke:#059669,color:#064e3b
+    classDef store fill:#fff7ed,stroke:#ea580c,color:#7c2d12
+    classDef external fill:#faf5ff,stroke:#9333ea,color:#581c87
+    class Users,Browser user
+    class Web,Routes,Services,Worker app
+    class Database store
+    class SMTP external
+```
+
+**One application, two execution paths:** browser requests pass through the Express routes and application services; the email worker reads the same database's outbox independently. Both run in the **same Node.js process**, using one shared MySQL connection pool.
+
+- **Frontend:** Express serves the HTML, CSS, and JavaScript; the browser calls the same origin's `/api` endpoints.
+- **API:** input validation, current-session checks, role permissions, and domain rules protect the relevant operations. Public discovery remains available without login.
+- **Database:** transactions persist accounts, sessions, events, enrollment, activity, and queued account email.
+- **Email worker:** a ten-second timer processes verification/recovery mail through SMTP and records send attempts. Development mail preview replaces SMTP sending.
+- **Activity:** personal notifications are stored in MySQL and read through the API; the overview refreshes every 30 seconds while visible.
+
+[Editable architecture source](docs/diagrams/system-architecture.mmd) · [Component and process guide](docs/SYSTEM-DESIGN.md#system-architecture)
+
+### Layer responsibilities
+
 | Layer              | Responsibility                                                                     | Implementation                                             |
 | ------------------ | ---------------------------------------------------------------------------------- | ---------------------------------------------------------- |
 | **Presentation**   | Public discovery, account screens, event management, and role-based dashboards.    | HTML, CSS, JavaScript in `frontend/`.                      |
